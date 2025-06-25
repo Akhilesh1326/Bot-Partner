@@ -28,7 +28,7 @@ app.use(cookieParser());
 
 
 // Imports for controllers 
-const {createUser} = require("./controller/userController");
+const {createUser, addUserAddress} = require("./controller/userController");
 
 
 // Connection of Databases as Postgre and MongoDB
@@ -66,6 +66,31 @@ app.post('/register', async(req, res)=>{
         console.log("Error while registering user", error.message);
         res.status(500);
     }
+});
+
+app.post('/add-address', async(req, res)=>{
+    const {addresstype, addressline1, addressline2, country, state, city, phonenumber} = req.body;
+    if(!addresstype) res.status(422).json({message: "address type is missing"})
+    if(!addressline1) res.status(422).json({message: "adress line 1 is missing"})
+    if(!country) res.status(422).json({message: "country is missing"})
+    if(!city) res.status(422).json({message: "city is missing"})
+    if(!phonenumber) res.status(422).json({message: "phone number is missing"})
+
+    const token = req.cookies.userCookie;
+    let varifyToken = jwt.verify(token, process.env.JWT_SECRET);
+    const userid = varifyToken.userId;
+    try {
+        const DB_res = await addUserAddress(userid, addresstype, addressline1, addressline2, country, state, city, phonenumber);
+        if(DB_res.status == 201){
+            res.status(200).json({message:"address added successful"});
+        }
+        else{
+            res.status(DB_res.status).json({message:DB_res.message});
+        }
+    } catch (error) {
+        console.log("Error while registering user", error.message);
+        res.status(500);
+    }    
 })
 
 
