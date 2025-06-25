@@ -28,7 +28,7 @@ app.use(cookieParser());
 
 
 // Imports for controllers 
-const createUser = require("./controller/userController");
+const {createUser} = require("./controller/userController");
 
 
 // Connection of Databases as Postgre and MongoDB
@@ -39,16 +39,17 @@ app.get('/', (req, res)=>{
 })
 
 app.post('/register', async(req, res)=>{
-    const {username, email, password, firstName, lastname, phonenumber, dateofbirth} = req.body;
+    const {username, email, password, firstname, lastname, phonenumber, dateofbirth} = req.body;
+    console.log(username, email, password, firstname, lastname, phonenumber, dateofbirth)
     if(!username) res.status(422).json({message:"Username is missing"});
     if(!email) res.status(422).json({message:"email is missing"});
     if(!password) res.status(422).json({message:"password is missing"});
-    if(!firstName) res.status(422).json({message:"firstname is missing"});
+    if(!firstname) res.status(422).json({message:"firstname is missing"});
     if(!lastname) res.status(422).json({message:"lastname is missing"});
     if(!phonenumber) res.status(422).json({message:"phonenumber is missing"});
     if(!dateofbirth) res.status(422).json({message:"dateofbirht is missing"});
     try {
-        const DB_res = await createUser(username, email, password, firstName, lastname, phonenumber, dateofbirth);
+        const DB_res = await createUser(username, email, password, firstname, lastname, phonenumber, dateofbirth);
 
         if(DB_res.status == 201){
             const token = jwt.sign({
@@ -59,7 +60,7 @@ app.post('/register', async(req, res)=>{
             res.status(200).json({message:"registration successful"});
         }
         else{
-            res.status(500).json({message:"registration unsuccessful"});
+            res.status(DB_res.status).json({message:DB_res.message});
         }
     } catch (error) {
         console.log("Error while registering user", error.message);
