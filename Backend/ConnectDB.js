@@ -16,6 +16,8 @@ const connectToPostgresSQL = () => {
         .catch((err) => {
             console.error("PostgreSQL connection error", err);
         });
+
+    return client;
 };
 
 
