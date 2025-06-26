@@ -16,14 +16,30 @@ async function createUser(username, email, password, firstname, lastname, phonen
     }
 };
 
-async function addUserAddress(userid, addresstype, addressline1, addressline2, country,state, city, phonenumber){
+async function addUserAddress(userid, addresstype, addressline1, addressline2, country, state, city, phonenumber) {
     try {
-        const responce = await client.query(`INSERT INTO addresses(userid, addresstype, addressline1, addressline2, country, state, city, phonenumber) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`, [userid, addresstype, addressline1, addressline2, country, state, city, phonenumber]);
-        return {status : 201, message: "address added", data : responce.rows[0]};
+        const response = await client.query(
+            `INSERT INTO addresses (userid, addresstype, addressline1, addressline2, country, state, city, phonenumber) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+             RETURNING *`,
+            [userid, addresstype, addressline1, addressline2, country, state, city, phonenumber]
+        );
+        return {
+            status: 201,
+            message: "Address added",
+            data: response.rows[0]
+        };
     } catch (error) {
-        console.log("Address inserting error occured in controller");
-        return {status: 400, message: "error occured in address inserting"}
+        console.error("Address insertion error occurred in controller:", error);
+        return {
+            status: 400,
+            message: "Error occurred during address insertion"
+        };
     }
 }
 
-module.exports = {createUser, addUserAddress};
+
+
+module.exports = {createUser, 
+    addUserAddress,
+};
