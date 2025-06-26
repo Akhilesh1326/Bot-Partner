@@ -28,7 +28,18 @@ app.use(cookieParser());
 
 
 // Imports for controllers 
-const {createUser, addUserAddress} = require("./controller/userController");
+const {createUser, 
+    addUserAddress} = require("./controller/userController");
+
+const {
+    getAllCategories, 
+    getCategoryById, 
+    getAllSubCategories,
+    getSubCategoriById,
+    getProductsBySubCategory,} = require("./controller/productController");
+
+
+const {fetchProducts} = require('./controller/LLMController');
 
 
 // Connection of Databases as Postgre and MongoDB
@@ -38,7 +49,10 @@ app.get('/', (req, res)=>{
     return res.json({message:"Hello it's bot server"});
 })
 
-app.post('/register', async(req, res)=>{
+// API call for user login
+
+// API call for registering new user
+app.post('/api/register', async(req, res)=>{
     const {username, email, password, firstname, lastname, phonenumber, dateofbirth} = req.body;
     console.log(username, email, password, firstname, lastname, phonenumber, dateofbirth)
     if(!username) res.status(422).json({message:"Username is missing"});
@@ -68,7 +82,8 @@ app.post('/register', async(req, res)=>{
     }
 });
 
-app.post('/add-address', async(req, res)=>{
+// API call for add new address
+app.post('/api/add-address', async(req, res)=>{
     const {addresstype, addressline1, addressline2, country, state, city, phonenumber} = req.body;
     if(!addresstype) res.status(422).json({message: "address type is missing"})
     if(!addressline1) res.status(422).json({message: "adress line 1 is missing"})
@@ -93,5 +108,86 @@ app.post('/add-address', async(req, res)=>{
     }    
 })
 
+
+// Products related API calls
+
+app.get("/api/categories", async(req, res)=>{
+    try {
+        const db_resp = await getAllCategories();
+        if(db_resp.status == 200) return res.status(db_resp.status).json({message: db_resp.message, data: db_resp.data});
+        
+        res.status(db_resp.status).json({message: db_resp.message});
+    } catch (error) {
+        console.log("error in server for getting all categories ", error);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+});
+
+app.get("/api/category/:id", async(req,res)=>{
+    try {
+        const id = parseInt(req.params.id);
+
+        if(isNaN(id)){
+            res.status(400).json({message:"Invalid category Id"});
+        }
+
+        const DB_res = await getCategoryById(id);
+
+        if(DB_res.status == 200) return res.status(DB_res.status).json({message: DB_res.message, data: DB_res.data});
+        res.status(DB_res.status).json({message: DB_res.message});
+
+    } catch (error) {
+        console.log("Error in server for getting category by id");
+        res.status(500).json({message:"Internal server error"});
+    }
+})
+
+app.get("/api/all-subcategory/:id", async(req,res)=>{
+    try {
+        const id = req.params.id;
+        const DB_res = await getAllSubCategories(id);
+
+        if(DB_res.status == 200) return res.status(DB_res.status).json({message: DB_res.message, data: DB_res.data});
+        res.status(DB_res.status).json({message: DB_res.message});
+
+    } catch (error) {
+        console.log("Error in server for getting all sub category by category id");
+        res.status(500).json({message:"Internal server error"});
+    }
+});
+
+
+app.get("/api/subcategory/:id", async(req,res)=>{
+    try {
+        const id = req.params.id;
+        const DB_res = await getSubCategoriById(id);
+
+        if(DB_res.status == 200) return res.status(DB_res.status).json({message: DB_res.message, data: DB_res.data});
+        res.status(DB_res.status).json({message: DB_res.message});
+        
+    } catch (error) {
+        console.log("Error in server for getting all sub category by category id");
+        res.status(500).json({message:"Internal server error"});
+    }
+});
+
+
+app.get("/api/sub-category/:id/products", async(req,res)=>{
+    try {
+        const id = req.params.id;
+        const DB_res = await getProductsBySubCategory(id);
+
+        if(DB_res.status == 200) return res.status(DB_res.status).json({message: DB_res.message, data: DB_res.data});
+        res.status(DB_res.status).json({message: DB_res.message});
+
+    } catch (error) {
+        console.log("Error in server for getting all sub category by category id");
+        res.status(500).json({message:"Internal server error"});
+    }
+});
+
+
+
+// LLM related API calls
 
 app.listen(PORT, ()=>console.log("Server started at ", PORT));
