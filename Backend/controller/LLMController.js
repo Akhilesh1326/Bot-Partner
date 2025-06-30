@@ -25,13 +25,12 @@ function extractProductNamesFromLLM(rawText) {
 
 /**
  * Sends a prompt to Gemini model and returns list of product names
+ * @param {string} productName - name of the main product
+ * @param {string|number} price - price of the main product
  * @param {string[]} dataToBeNotIncluded - products to exclude
  * @returns {Promise<string[]>}
  */
-async function getSuggestions(dataToBeNotIncluded) {
-    const productName = 'Coconut Oil';
-    const price = '7.99';
-
+async function getSuggestions(productName, price, dataToBeNotIncluded) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `A user added the following product to their cart:
@@ -58,20 +57,23 @@ Last instruction: Do not include these products in your recommendation: ${dataTo
 }
 
 /**
+ * Fetch complementary products from DB based on LLM suggestions
+ * @param {string} productName
+ * @param {string|number} price
  * @returns {Promise<Object[]>} Array of product rows from DB
  */
-async function fetchProducts() {
+async function fetchProducts(productName, price) {
     let productToSuggestion = [];
     let dataToBeNotIncluded = [];
     let foundCount = 0;
 
     while (foundCount < 3) {
-        const productArray = await getSuggestions(dataToBeNotIncluded);
+        const productArray = await getSuggestions(productName, price, dataToBeNotIncluded);
 
         try {
             for (let i = 0; i < productArray.length; i++) {
-                const productName = productArray[i];
-                const resp = await client.query(`SELECT * FROM products WHERE name = $1`, [productName]);
+                const suggestedName = productArray[i];
+                const resp = await client.query(`SELECT * FROM products WHERE name = $1`, [suggestedName]);
 
                 if (resp.rows.length > 0) {
                     const alreadyAdded = productToSuggestion.some(
@@ -79,20 +81,20 @@ async function fetchProducts() {
                     );
 
                     if (!alreadyAdded) {
-                        console.log("Found product in DB:", resp.rows[0].name);
+                        console.log("✅ Found product in DB:", resp.rows[0].name);
                         productToSuggestion.push(resp.rows[0]);
                         foundCount++;
                     }
                 }
             }
         } catch (error) {
-            console.error(" Error querying product from DB:", error);
+            console.error("❌ Error querying product from DB:", error);
         }
 
         dataToBeNotIncluded = [...dataToBeNotIncluded, ...productArray];
 
         if (dataToBeNotIncluded.length > 25) {
-            console.warn(" Too many retries, exiting with available suggestions");
+            console.warn("⚠️ Too many retries, exiting with available suggestions");
             break;
         }
     }
