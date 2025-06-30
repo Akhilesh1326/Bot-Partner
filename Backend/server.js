@@ -40,6 +40,7 @@ const {
 
 
 const {fetchProducts} = require('./controller/LLMController');
+const { connect } = require("http2");
 
 
 // Connection of Databases as Postgre and MongoDB
@@ -189,5 +190,22 @@ app.get("/api/sub-category/:id/products", async(req,res)=>{
 
 
 // LLM related API calls
+
+app.get("/api/get-recomendations", async(req, res)=>{
+    try {
+        const {productName, price} = req.body;
+        console.log('hello');
+
+        const result = await fetchProducts(productName, price);
+        result.forEach(element => {
+            console.log(element)
+        });
+        console.log("hellllooo")
+        res.status(200).json({recomendations: result});
+
+    } catch (error) {
+        
+    }
+})
 
 app.listen(PORT, ()=>console.log("Server started at ", PORT));
