@@ -45,6 +45,8 @@ const { connect } = require("http2");
 
 // Connection of Databases as Postgre and MongoDB
 ConnectDB.connectToPostgresSQL();
+ConnectDB.connectToMongo();
+
 
 app.get('/', (req, res)=>{
     return res.json({message:"Hello it's bot server"});
@@ -193,18 +195,21 @@ app.get("/api/sub-category/:id/products", async(req,res)=>{
 
 app.get("/api/get-recomendations", async(req, res)=>{
     try {
-        const {productName, price} = req.body;
-        console.log('hello');
+        const {productName, price} = req.query;
+        console.log(productName, price)
+        // console.log('hello');
 
         const result = await fetchProducts(productName, price);
         result.forEach(element => {
             console.log(element)
         });
         console.log("hellllooo")
+        // res.status(200);
         res.status(200).json({recomendations: result});
 
     } catch (error) {
-        
+        console.log("Error while getting recomendations at server ", error);
+        res.status(500).json({message:"Internal server error"})
     }
 })
 
