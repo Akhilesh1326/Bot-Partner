@@ -39,7 +39,7 @@ const {
     getProductsBySubCategory,} = require("./controller/productController");
 
 
-const {fetchProducts} = require('./controller/LLMController');
+const {fetchProducts, fetchRecommendationsForItemsList} = require('./controller/LLMController');
 const { connect } = require("http2");
 
 
@@ -211,6 +211,37 @@ app.get("/api/get-recomendations", async(req, res)=>{
         console.log("Error while getting recomendations at server ", error);
         res.status(500).json({message:"Internal server error"})
     }
-})
+});
+
+app.post("/api/get-allproducts", async(req, res) => {
+    try {
+        console.log("📥 Received cart items:", req.body.cartItems);
+        
+        const result = await fetchRecommendationsForItemsList(req.body.cartItems);
+        
+        console.log("📤 Sending response to client:");
+        console.log(`   📝 Recommendations: ${result.recommendations ? 'Generated' : 'Not generated'}`);
+        console.log(`   🛍️ Suggested Products: ${result.suggestedProducts.length} products`);
+        console.log(`   🎯 Total Products Found: ${result.totalProductsFound}`);
+        
+        res.status(200).json({
+            success: true,
+            recommendations: result.recommendations,
+            suggestedProducts: result.suggestedProducts,
+            totalProductsFound: result.totalProductsFound,
+            message: result.suggestedProducts.length > 0 
+                ? `Found ${result.suggestedProducts.length} recommended products` 
+                : "No products found in database to recommend"
+        });
+        
+    } catch (error) {
+        console.error("❌ Error while getting recommendations at server:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
+}); 
 
 app.listen(PORT, ()=>console.log("Server started at ", PORT));
