@@ -1,1 +1,46 @@
 @import "tailwindcss";
+:root {
+  --walmart-blue: #0071ce;
+  --walmart-yellow: #ffc220;
+}
+
+@layer utilities {
+  .text-walmart-blue {
+    color: var(--walmart-blue);
+  }
+
+  .bg-walmart-blue {
+    background-color: var(--walmart-blue);
+  }
+
+  .text-walmart-yellow {
+    color: var(--walmart-yellow);
+  }
+
+  .bg-walmart-yellow {
+    background-color: var(--walmart-yellow);
+  }
+
+  .border-walmart-blue {
+    border-color: var(--walmart-blue);
+  }
+
+  .border-walmart-yellow {
+    border-color: var(--walmart-yellow);
+  }
+
+  .ring-walmart-blue {
+    --tw-ring-color: var(--walmart-blue);
+  }
+
+  .ring-walmart-yellow {
+    --tw-ring-color: var(--walmart-yellow);
+  }
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
