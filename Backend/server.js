@@ -39,7 +39,7 @@ const {
     getProductsBySubCategory,} = require("./controller/productController");
 
 
-const {fetchProducts, fetchRecommendationsForItemsList} = require('./controller/LLMController');
+const {fetchProducts, fetchRecommendationsForItemsList, chatLLm} = require('./controller/LLMController');
 const { connect } = require("http2");
 
 
@@ -57,7 +57,7 @@ app.get('/', (req, res)=>{
 // API call for registering new user
 app.post('/api/register', async(req, res)=>{
     const {username, email, password, firstname, lastname, phonenumber, dateofbirth} = req.body;
-    console.log(username, email, password, firstname, lastname, phonenumber, dateofbirth)
+    // console.log(username, email, password, firstname, lastname, phonenumber, dateofbirth)
     if(!username) res.status(422).json({message:"Username is missing"});
     if(!email) res.status(422).json({message:"email is missing"});
     if(!password) res.status(422).json({message:"password is missing"});
@@ -205,6 +205,8 @@ app.get("/api/get-recomendations", async(req, res)=>{
         });
         console.log("hellllooo")
         // res.status(200);
+
+        // console.log("reco data = ", result)
         res.status(200).json({recomendations: result});
 
     } catch (error) {
@@ -243,5 +245,44 @@ app.post("/api/get-allproducts", async(req, res) => {
         });
     }
 }); 
+app.post("/api/chat-LLM", async (req, res) => {
+    try {
+        console.log("Chat request received:", req.body);
+        
+        const { message, cartItems = [] } = req.body;
+        
+        // Validate input
+        if (!message || typeof message !== 'string') {
+            return res.status(400).json({
+                error: "Message is required and must be a string",
+                response: "Please provide a valid message."
+            });
+        }
+
+        // Call the enhanced chat LLM function
+        const chatResult = await chatLLm(message, cartItems);
+
+        // console.log("answer from chatLLM = ", chatResult.validatedProducts);
+        res.status(200).json(chatResult.validatedProducts);
+
+    } catch (error) {
+        console.error("Error in chat-LLM API:", error);
+        
+        // More detailed error logging
+        if (error.message) {
+            console.error("Error message:", error.message);
+        }
+        if (error.stack) {
+            console.error("Error stack:", error.stack);
+        }
+
+        res.status(500).json({
+            error: "Internal server error",
+            response: "I'm having trouble processing your request right now. Please try again in a moment.",
+            timestamp: new Date().toISOString(),
+            debug: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
 
 app.listen(PORT, ()=>console.log("Server started at ", PORT));
