@@ -30,13 +30,15 @@ import {
   Truck,
   Shield,
   Award,
+  Mic,
 } from "lucide-react"
-import Checkout from "./checkout"
+import VoiceAssistant from "./VoiceAssistant"
+import Checkout from "./Checkout"
 
 const App = () => {
   const [showCheckout, setShowCheckout] = useState(false)
   const [cartItems, setCartItems] = useState([])
-
+  const [activeTab, setActiveTab] = useState("shop")
   // Navigation state
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState(null)
@@ -47,7 +49,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [breadcrumbs, setBreadcrumbs] = useState([{ name: "Home", view: "categories" }])
-  const [showBuyTogether, setShowBuyTogether] = useState(false)
 
   // API base URL
   const API_BASE_URL = "http://localhost:8000"
@@ -96,7 +97,7 @@ const App = () => {
     } catch (error) {
       console.error("Error fetching categories:", error)
       setError("Failed to connect to server")
-      // Enhanced fallback data with better structure
+      // Enhanced fallback data
       setCategories([
         {
           id: 1,
@@ -495,50 +496,6 @@ const App = () => {
     </div>
   )
 
-  const BuyTogetherSection = () => {
-    if (cartItems.length === 0) return null
-
-    const suggestedProducts = products.filter((p) => !cartItems.find((item) => item.id === p.id)).slice(0, 3)
-    const bundleDiscount = 15
-    const bundlePrice = getTotalPrice() + suggestedProducts.reduce((sum, p) => sum + p.price, 0)
-    const bundleSavings = bundlePrice * (bundleDiscount / 100)
-
-    return (
-      <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 mb-8 border border-green-200">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-green-100 rounded-full">
-            <ShoppingBag className="w-6 h-6 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">Frequently Bought Together</h3>
-            <p className="text-green-600 font-medium">Save ${bundleSavings.toFixed(2)} when you buy these together!</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {suggestedProducts.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg p-4 border border-gray-200">
-              <img
-                src={product.image || "/placeholder.svg"}
-                alt={product.name}
-                className="w-full h-32 object-cover rounded-md mb-3"
-              />
-              <h4 className="font-medium text-gray-800 text-sm mb-2">{product.name}</h4>
-              <div className="flex items-center justify-between">
-                <span className="text-lg font-bold text-green-600">${product.price}</span>
-                <button
-                  onClick={() => addToCart(product)}
-                  className="bg-green-600 text-white px-3 py-1 rounded-full text-xs hover:bg-green-700 transition-colors"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
   if (showCheckout) {
     return <Checkout cartItems={cartItems} onBack={() => setShowCheckout(false)} getTotalPrice={getTotalPrice} />
   }
@@ -566,7 +523,6 @@ const App = () => {
               <span>Create account</span>
             </div>
           </div>
-
           {/* Main header */}
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
@@ -592,7 +548,6 @@ const App = () => {
                 </button>
               </div>
             </div>
-
             {/* Enhanced Search Bar */}
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -630,7 +585,6 @@ const App = () => {
                 <span className="text-sm text-gray-600">Protected checkout</span>
               </div>
             </div>
-
             <div className="space-y-4 mb-6">
               {cartItems.map((item) => (
                 <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -672,7 +626,6 @@ const App = () => {
                 </div>
               ))}
             </div>
-
             <div className="border-t border-gray-200 pt-6">
               <div className="flex justify-between items-center mb-4">
                 <div className="text-right">
@@ -692,73 +645,98 @@ const App = () => {
           </div>
         )}
 
-        {/* Buy Together Section */}
-        <BuyTogetherSection />
-
-        {/* Breadcrumbs */}
-        <Breadcrumbs />
-
-        {/* Error Message */}
-        {error && <ErrorMessage />}
-
-        {/* Loading Spinner */}
-        {isLoading && <LoadingSpinner />}
-
-        {/* Categories View */}
-        {!isLoading && currentView === "categories" && (
-          <div>
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">Shop by Category</h2>
-              <p className="text-xl text-gray-600">Discover amazing deals across all departments</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {categories.map((category) => (
-                <CategoryCard key={category.id} category={category} />
-              ))}
-            </div>
+        {/* Main Content with Tabs */}
+        <div className="w-full">
+          <div className="flex bg-white rounded-lg shadow-sm mb-8 overflow-hidden">
+            <button
+              onClick={() => setActiveTab("shop")}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
+                activeTab === "shop" ? "bg-blue-500 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Shop Products
+            </button>
+            <button
+              onClick={() => setActiveTab("voice")}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
+                activeTab === "voice" ? "bg-blue-500 text-white" : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+              }`}
+            >
+              <Mic className="w-4 h-4" />
+              Voice Assistant
+              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold">New</span>
+            </button>
           </div>
-        )}
 
-        {/* Subcategories View */}
-        {!isLoading && currentView === "subcategories" && (
-          <div>
-            <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-800 mb-4">{selectedCategory?.name}</h2>
-              <p className="text-xl text-gray-600">Choose from our wide selection</p>
+          {activeTab === "shop" && (
+            <div className="space-y-6">
+              {/* Breadcrumbs */}
+              <Breadcrumbs />
+              {/* Error Message */}
+              {error && <ErrorMessage />}
+              {/* Loading Spinner */}
+              {isLoading && <LoadingSpinner />}
+              {/* Categories View */}
+              {!isLoading && currentView === "categories" && (
+                <div>
+                  <div className="text-center mb-12">
+                    <h2 className="text-4xl font-bold text-gray-800 mb-4">Shop by Category</h2>
+                    <p className="text-xl text-gray-600">Discover amazing deals across all departments</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {categories.map((category) => (
+                      <CategoryCard key={category.id} category={category} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Subcategories View */}
+              {!isLoading && currentView === "subcategories" && (
+                <div>
+                  <div className="text-center mb-12">
+                    <h2 className="text-4xl font-bold text-gray-800 mb-4">{selectedCategory?.name}</h2>
+                    <p className="text-xl text-gray-600">Choose from our wide selection</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {subCategories.map((subCategory) => (
+                      <SubCategoryCard key={subCategory.id} subCategory={subCategory} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Products View */}
+              {!isLoading && currentView === "products" && (
+                <div>
+                  <div className="flex items-center justify-between mb-8">
+                    <div>
+                      <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedSubCategory?.name}</h2>
+                      <p className="text-gray-600">{products.length} products found</p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option>Sort by: Featured</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                        <option>Customer Rating</option>
+                        <option>Best Sellers</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                    {products.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {subCategories.map((subCategory) => (
-                <SubCategoryCard key={subCategory.id} subCategory={subCategory} />
-              ))}
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* Products View */}
-        {!isLoading && currentView === "products" && (
-          <div>
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">{selectedSubCategory?.name}</h2>
-                <p className="text-gray-600">{products.length} products found</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Sort by: Featured</option>
-                  <option>Price: Low to High</option>
-                  <option>Price: High to Low</option>
-                  <option>Customer Rating</option>
-                  <option>Best Sellers</option>
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {products.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        )}
+          {activeTab === "voice" && (
+            <VoiceAssistant cartItems={cartItems} onAddToCart={addToCart} apiBaseUrl={API_BASE_URL} />
+          )}
+        </div>
       </div>
     </div>
   )
